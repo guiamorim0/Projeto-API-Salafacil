@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 import models
 import schemas
@@ -111,3 +111,12 @@ def excluir_reserva(reserva_id: int, db: Session = Depends(get_db)):
     db.delete(reserva)
     db.commit()
     return {"mensagem":"reserva removida com sucesso!"}
+
+@app.get(
+    '/salas/{sala_id}/reservas',
+    response_model=schemas.SalaComReservas)
+def sala_reservas(sala_id: int, db: Session = Depends(get_db)):
+    sala = db.query(models.Sala).options(joinedload(models.Sala.reservas)).filter(models.Sala.id == sala_id).first()
+    if not sala:
+        raise HTTPException(status_code=404, detail="Sala nao encontrada")
+    return sala 
